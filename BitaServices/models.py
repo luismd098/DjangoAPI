@@ -4,14 +4,18 @@ from django.db import models
 
 class Usuario(models.Model):
     UsuarioId = models.AutoField(primary_key=True)
-    Usuario = models.CharField(max_length=30)
+    Usuario = models.CharField(max_length=30, unique = True)
     Password = models.CharField(max_length=30)
     Nombre = models.CharField(max_length=100)
     Apellidos = models.CharField(max_length=100)
-    FCreacion = models.DateField()
+    FCreacion = models.DateTimeField()
     Activo = models.BooleanField(default = True)
-    PrivilegioId = models.ForeignKey(
-        "Privilegio", on_delete=models.CASCADE)
+    Privilegios = models.ForeignKey(
+        "Privilegio", related_name='Privilegios', on_delete=models.CASCADE)
+    
+    def save(self, *args, **kwargs):
+        self.Usuario = self.Usuario.lower()            
+        return super(Usuario, self).save(*args, **kwargs)
     
 class Privilegio(models.Model):
     PrivilegioId = models.AutoField(primary_key=True)    
@@ -19,7 +23,7 @@ class Privilegio(models.Model):
     Eliminar = models.BooleanField(default = True)
     Agregar = models.BooleanField(default = True)
     Editar = models.BooleanField(default = True)
-    FechaCreacion = models.DateField()
+    FechaCreacion = models.DateTimeField()
     Activo = models.BooleanField(default = True)
     
 class Bitacora(models.Model):
@@ -28,9 +32,9 @@ class Bitacora(models.Model):
     NumeroEquipo = models.IntegerField()
     Modelo = models.CharField(max_length = 50)
     Version = models.CharField(max_length = 50)
-    FechaCreacion = models.DateField()
+    FechaCreacion = models.DateTimeField()
     Activo = models.BooleanField(default = True)
-    AreaId = models.ForeignKey(
+    Areas = models.ForeignKey(
         "Area", on_delete=models.CASCADE)
     
 class Area(models.Model):
@@ -47,27 +51,27 @@ class EstatusReporte(models.Model):
 class Licencia(models.Model):
     LicenciaId = models.AutoField(primary_key=True)
     Descripcion = models.CharField(max_length = 200)    
-    FechaCreacion = models.DateField()
+    FechaCreacion = models.DateTimeField()
     Activo = models.BooleanField(default = True)
     
 class RelBitacoraLicencia(models.Model):
     RelId = models.AutoField(primary_key=True)
     Activo = models.BooleanField(default = True)
-    FechaCreacion = models.DateField()
-    FechaActualizacion = models.DateField()
-    LicenciaId = models.ForeignKey(
+    FechaCreacion = models.DateTimeField()
+    FechaActualizacion = models.DateTimeField()
+    Licencias = models.ForeignKey(
         "Licencia", on_delete=models.DO_NOTHING)
-    BitacoraId = models.ForeignKey(
+    Bitacoras = models.ForeignKey(
         "Bitacora", on_delete=models.DO_NOTHING)
     
 class Reporte(models.Model):
     ReporteId = models.AutoField(primary_key=True)
     Descripcion = models.CharField(max_length = 1000)    
-    FechaCreacion = models.DateField()
+    FechaCreacion = models.DateTimeField()
     Activo = models.BooleanField(default = True)
-    BitacoraId = models.ForeignKey(
+    Bitacoras = models.ForeignKey(
         "Bitacora", on_delete=models.CASCADE)
-    EstatusReporteId = models.ForeignKey(
+    EstatusReportes = models.ForeignKey(
         "EstatusReporte", on_delete=models.CASCADE)
     
     

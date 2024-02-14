@@ -1,11 +1,14 @@
 from django.shortcuts import render
+# from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
+from django.db import models
 from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
+import json
 
 from BitaServices.models import Usuario,Reporte,Bitacora,RelBitacoraLicencia
 
-# from BitaServices.serializers import UsersSerializer
+from BitaServices.serializers import UsuarioSerializer
 
 from  BitaServices.utilities.cifrado import AESCipher
 
@@ -13,18 +16,44 @@ from  BitaServices.utilities.cifrado import AESCipher
 
 @csrf_exempt
 def loginApi(request,id=0):
-    if request.method == 'POST':
-        data = JSONParser().parse(request)
-        txt = data['txt']
-        type = data['type']
-        cipher = AESCipher()
-        if type == 1:
-            psw = cipher.encrypt(txt)
-        elif type == 2:
-            psw = cipher.decrypt(txt)
-        return JsonResponse({'msg':str(psw)},safe=False)
+    # try: 
+        if request.method == 'POST':
+            data = JSONParser().parse(request)
+            cipher = AESCipher()
+            
+            user = data['user']
+            password = data['password']
+            
+            user = user.lower()
+            
+            if not Usuario.objects.filter(Usuario = user).exists():
+                return JsonResponse({'Msg':'El usuario no existe, favor de validar.','Status':1},safe=False)
+            
+            user_data = Usuario.objects.get(Usuario = user)
+            
+            if user_data.Activo == False:
+                return JsonResponse({'Msg':'El usuario se encuentra dado de baja.','Status':1},safe=False)
+                        
+            if not cipher.validate(password,user_data.Password):
+                return JsonResponse({'Msg':'La contraseña ingresada es incorrecta, favor de validar.','Status':1},safe=False)
+                
+            user_serializer = UsuarioSerializer(user_data)
+            json_data = user_serializer.data     
+            json_data['Status'] = 0                 
+            json_data['Msg'] = ''                 
+            
+            return JsonResponse(json_data,safe=False)                
+    # except:
+        # return JsonResponse({'Msg':'Algo salio mal, por favor comunicate con el administrador.','Status':1},safe=False)
         
         
+def convertToJson(data):
+   data_dict = ValuesQuerySetToDict(data)
+   response = json.dumps(data_dict)
+   return response
+
+def ValuesQuerySetToDict(vqs):
+    return [item for item in vqs]        
         
         
 

@@ -16,10 +16,17 @@ class AESCipher(object):
         return base64.b64encode(cipher.encrypt(pad(raw.encode(),AES.block_size))).decode('utf-8')
 
     def decrypt(self, enc):
-        enc = base64.b64decode(enc)
-        cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
-        return unpad(cipher.decrypt(enc),AES.block_size).decode('utf-8')
+        try:
+            enc = base64.b64decode(enc)
+            cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
+            return unpad(cipher.decrypt(enc),AES.block_size).decode('utf-8')
+        except:
+            return ""
 
+    def validate(self, psw1, psw2):
+        psw2_decrypted = self.decrypt(psw2)
+        return psw1 == psw2_decrypted
+    
     def _pad(self, s):
         return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
 
